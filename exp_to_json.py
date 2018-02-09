@@ -33,6 +33,7 @@ def exp_to_json(file_path):
                 is_job_table = True
                 so_module = re.search(r'so_module=([^\s]*)', line).group(1)
                 exp_json['so_job_table'] = {'so_module': so_module, 'params': {}}
+                continue
 
             # so_job_prompts
             if line.startswith('START=so_job_prompts'):
@@ -44,6 +45,7 @@ def exp_to_json(file_path):
                     'so_prompt': so_prompt,
                     'params': {}
                 })
+                continue
 
             # so_object_cond
             if line.startswith('START=so_object_cond'):
@@ -57,6 +59,7 @@ def exp_to_json(file_path):
                     'so_obj_type': so_obj_type,
                     'params': {}
                 })
+                continue
 
             # END reset
             if line.startswith('END'):
