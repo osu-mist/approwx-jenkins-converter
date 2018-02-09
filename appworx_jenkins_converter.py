@@ -1,5 +1,4 @@
 import argparse
-import json
 from exp_to_json import exp_to_json
 from lxml import etree as et
 
@@ -48,9 +47,9 @@ if exp_json['so_job_table']['params']['so_program']:
     et.SubElement(shell, 'command').text = 'sqr {}.sqr'.format(exp_json['so_job_table']['params']['so_program'])
 
 
-print(et.tostring(
+jenkins_job_config = et.tostring(
     project,
     xml_declaration=True,
     encoding='UTF-8',
-    pretty_print=True)
+    pretty_print=True
 )
