@@ -14,5 +14,9 @@ Python Script which converts AppWorx job (module) or processes flow (chain) to J
 3. Run the script:
 
     ```
-    $ python appworx_jenkins_converter.py /path/to/.exp/file
+    $ python appworx_jenkins_converter.py \
+        /path/to/.exp/file \
+        jenkins_url \
+        jenkins_username \
+        jenkins_token
     ```
