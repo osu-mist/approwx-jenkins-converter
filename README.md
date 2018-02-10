@@ -30,3 +30,14 @@ Python Script which converts AppWorx job (module) or processes flow (chain) to J
           <jenkins_username> \
           <jenkins_token> > config.xml
     ```
+
+## Terminology Translation
+
+| AppWorx | Jenkins |
+|---------|---------|
+| Request | Build  |
+| Prompt | Parameter |
+| Agent/Group | Agent/Node  |
+| Job/Module (old version) | (FreeStyle Project) Job |
+| Process Flows/Chain (old version) | Pipeline/MultiJob Project |
+| Export File (.exp) | Job Configuration (config.xml) |
