@@ -1,11 +1,15 @@
 import argparse
+import jenkins
 from exp_to_json import exp_to_json
 from lxml import etree as et
 
 parser = argparse.ArgumentParser()
-parser.add_argument("file")
+parser.add_argument("exp_file")
+parser.add_argument("jenkins_url")
+parser.add_argument("jenkins_username")
+parser.add_argument("jenkins_token")
 args = parser.parse_args()
-exp_json = exp_to_json(args.file)
+exp_json = exp_to_json(args.exp_file)
 
 # initiate template
 project = et.Element('project')
@@ -53,3 +57,13 @@ jenkins_job_config = et.tostring(
     encoding='UTF-8',
     pretty_print=True
 )
+
+print(jenkins_job_config)
+
+# import config directly to Jenkins
+server = jenkins.Jenkins(
+    args.jenkins_url,
+    username=args.jenkins_username,
+    password=args.jenkins_token
+)
+server.create_job(exp_json['so_job_table']['so_module'], jenkins_job_config)
