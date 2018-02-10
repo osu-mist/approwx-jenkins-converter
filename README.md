@@ -16,9 +16,9 @@ Python Script which converts AppWorx job (module) or processes flow (chain) to J
     ```
     $ python appworx_jenkins_converter.py \
           /path/to/.exp/file \
-          jenkins_url \
-          jenkins_username \
-          jenkins_token
+          <jenkins_url> \
+          <jenkins_username> \
+          <jenkins_token>
     ```
 
     You can also export the `config.xml` by:
@@ -26,7 +26,7 @@ Python Script which converts AppWorx job (module) or processes flow (chain) to J
     ```
     $ python appworx_jenkins_converter.py \
           /path/to/.exp/file \
-          jenkins_url \
-          jenkins_username \
-          jenkins_token > config.xml
+          <jenkins_url> \
+          <jenkins_username> \
+          <jenkins_token> > config.xml
     ```
