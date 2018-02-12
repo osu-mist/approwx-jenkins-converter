@@ -50,7 +50,6 @@ if exp_json['so_job_table']['params']['so_program']:
     shell = et.SubElement(builders, 'hudson.tasks.Shell')
     et.SubElement(shell, 'command').text = 'sqr {}.sqr'.format(exp_json['so_job_table']['params']['so_program'])
 
-
 jenkins_job_config = et.tostring(
     project,
     xml_declaration=True,

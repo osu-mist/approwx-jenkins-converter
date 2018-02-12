@@ -32,7 +32,10 @@ def exp_to_json(file_path):
             if line.startswith('START=so_job_table'):
                 is_job_table = True
                 so_module = re.search(r'so_module=([^\s]*)', line).group(1)
-                exp_json['so_job_table'] = {'so_module': so_module, 'params': {}}
+                exp_json['so_job_table'] = {
+                    'so_module': so_module,
+                    'params': {'roles': []}
+                }
                 continue
 
             # so_job_prompts
@@ -67,7 +70,10 @@ def exp_to_json(file_path):
 
             match = re.search(r'^(.*?)=(.*)', line)
             if match and is_job_table:
-                exp_json['so_job_table']['params'][match.group(1)] = match.group(2)
+                if match.group(1) == 'roles':
+                    exp_json['so_job_table']['params'][match.group(1)] += match.group(2).split()
+                else:
+                    exp_json['so_job_table']['params'][match.group(1)] = match.group(2)
             elif match and is_job_prompts:
                 exp_json['so_job_prompts'][int(so_prompt)-1]['params'][match.group(1)] = match.group(2)
             elif match and is_object_cond:
