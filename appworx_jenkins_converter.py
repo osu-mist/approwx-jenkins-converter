@@ -57,12 +57,12 @@ jenkins_job_config = et.tostring(
     pretty_print=True
 )
 
-print(jenkins_job_config)
+# print(jenkins_job_config)
 
 # import config directly to Jenkins
-server = jenkins.Jenkins(
-    args.jenkins_url,
-    username=args.jenkins_username,
-    password=args.jenkins_token
-)
-server.create_job(exp_json['so_job_table']['so_module'], jenkins_job_config)
+# server = jenkins.Jenkins(
+#     args.jenkins_url,
+#     username=args.jenkins_username,
+#     password=args.jenkins_token
+# )
+# server.create_job(exp_json['so_job_table']['so_module'], jenkins_job_config)
