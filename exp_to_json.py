@@ -1,5 +1,4 @@
 import re
-import json
 
 
 def exp_to_json(file_path):
