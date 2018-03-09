@@ -4,12 +4,32 @@ import json
 
 def exp_to_json(file_path):
 
+    def _reset_switches():
+        global is_job_table, is_documentation, is_module_sched, is_chain_detail
+        global is_job_prompts, is_object_cond
+
+        is_job_table = False
+        is_documentation = False
+        is_chain_detail = False
+        is_module_sched = False
+        is_job_prompts = False
+        is_object_cond = False
+
+    # global switches
+    global is_job_table, is_documentation, is_module_sched, is_chain_detail
+    global is_job_prompts, is_object_cond
+
+    # section index
+    module_sched_idx = chain_idx = -1
+
     exp_json = {
         'aw_module_sched': [],
+        'so_chain_detail': [],
         'so_job_table': {},
         'so_job_prompts': [],
         'so_object_cond': []
     }
+
     check_dict = {
         'B': [],  # program types
         'D': [],  # data type
@@ -24,12 +44,7 @@ def exp_to_json(file_path):
         'U': []   #
     }
 
-    is_job_table = False
-    is_documentation = False
-    is_module_sched = False
-    module_sched_idx = -1
-    is_job_prompts = False
-    is_object_cond = False
+    _reset_switches()
 
     with open(file_path, 'r') as f:
 
@@ -75,6 +90,19 @@ def exp_to_json(file_path):
                 })
                 continue
 
+            # so_chain_detail
+            if line.startswith('START=so_chain_detail'):
+                is_chain_detail = True
+                chain_idx += 1
+                so_module = re.search(r'so_module=([^\s]*)', line).group(1)
+                so_task_name = re.search(r'so_task_name=([^\s]*)', line).group(1)
+                exp_json['so_chain_detail'].append({
+                    'so_module': so_module,
+                    'so_task_name': so_task_name,
+                    'params': {}
+                })
+                continue
+
             # so_job_prompts
             if line.startswith('START=so_job_prompts'):
                 is_job_prompts = True
@@ -89,40 +117,59 @@ def exp_to_json(file_path):
 
             # so_object_cond
             if line.startswith('START=so_object_cond'):
+                # if line is too long, need to combine the next line
+                if line.endswith('\\\n'):
+                    line = line.rstrip('\\\n') + next(f).lstrip('START=')
+
                 is_object_cond = True
                 so_module = re.search(r'so_module=([^\s]*)', line).group(1)
-                # so_soc_order = re.search(r'so_soc_order=([^\s]*)', line).group(1)
-                # so_obj_type = re.search(r'so_obj_type=([^\s]*)', line).group(1)
-                # exp_json['so_object_cond'].append({
-                #     'so_module': so_module,
-                #     'so_soc_order': so_soc_order,
-                #     'so_obj_type': so_obj_type,
-                #     'params': {}
-                # })
+
+                pattern = r'so_task_name=([^\s]*)'
+                so_task_name = None if not re.search(pattern, line) else re.search(pattern, line).group(1)
+
+                so_soc_order = re.search(r'so_soc_order=([^\s]*)', line).group(1)
+                so_obj_type = re.search(r'so_obj_type=([^\s]*)', line).group(1)
+                exp_json['so_object_cond'].append({
+                    'so_module': so_module,
+                    'so_task_name': so_task_name,
+                    'so_soc_order': so_soc_order,
+                    'so_obj_type': so_obj_type,
+                    'params': {}
+                })
                 continue
 
-            # END reset
+            # reset all switches if END
             if line.startswith('END'):
-                is_job_table = False
-                is_documentation = False
-                is_module_sched = False
-                is_job_prompts = False
-                is_object_cond = False
+                _reset_switches()
 
             match = re.search(r'^(.*?)=(.*)', line)
+
+            # job_table
             if match and is_job_table:
                 if match.group(1) == 'roles':
                     exp_json['so_job_table']['params'][match.group(1)] += match.group(2).split()
                 else:
                     exp_json['so_job_table']['params'][match.group(1)] = match.group(2)
+
+            # documentation
             elif match and is_documentation:
                 exp_json['so_documentation']['so_doc_text'] += match.group(2)
+
+            # module_sched
             elif match and is_module_sched:
                 exp_json['aw_module_sched'][module_sched_idx]['params'][match.group(1)] = match.group(2)
+
+            # chain_detail
+            elif match and is_chain_detail:
+                exp_json['so_chain_detail'][chain_idx]['params'][match.group(1)] = match.group(2)
+
+            # job_prompts
             elif match and is_job_prompts:
                 exp_json['so_job_prompts'][int(so_prompt)-1]['params'][match.group(1)] = match.group(2)
-            # elif match and is_object_cond:
-            #     exp_json['so_object_cond'][int(so_soc_order)-1]['params'][match.group(1)] = match.group(2)
+
+            # object_cond
+            elif match and is_object_cond:
+                exp_json['so_object_cond'][int(so_soc_order)-1]['params'][match.group(1)] = match.group(2)
 
             # TODO: need to handle line starts with 'DELETE'?
 
