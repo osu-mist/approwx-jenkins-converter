@@ -48,6 +48,10 @@ def exp_to_json(file_path):
     with open(file_path, 'r') as f:
 
         for line in f:
+            # if line is too long, combine the next line
+            if line.endswith('\\\n'):
+                line = line.rstrip('\\\n') + re.search(r'^.*?=(.*)', next(f)).group(1)
+
             # ************************************************
             # parse check options
             # ************************************************
@@ -124,15 +128,11 @@ def exp_to_json(file_path):
 
             # so_object_cond
             if line.startswith('START=so_object_cond'):
-                # if line is too long, need to combine the next line
-                if line.endswith('\\\n'):
-                    line = line.rstrip('\\\n') + next(f).lstrip('START=')
-
                 is_object_cond = True
                 so_module = re.search(r'so_module=([^\s]*)', line).group(1)
 
-                pattern = r'so_task_name=([^\s]*)'
-                so_task_name = None if not re.search(pattern, line) else re.search(pattern, line).group(1)
+                task_pattern = r'so_task_name=([^\s]*)'
+                so_task_name = None if not re.search(task_pattern, line) else re.search(task_pattern, line).group(1)
 
                 so_soc_order = re.search(r'so_soc_order=([^\s]*)', line).group(1)
                 so_obj_type = re.search(r'so_obj_type=([^\s]*)', line).group(1)
