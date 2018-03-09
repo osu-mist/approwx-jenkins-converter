@@ -49,9 +49,17 @@ def exp_to_json(file_path):
     with open(file_path, 'r') as f:
 
         for line in f:
+            # ************************************************
+            # parse check options
+            # ************************************************
+
             if line.startswith('CHECK'):
                 match = re.search(r'^CHECK (.*) (.*)', line)
                 check_dict[match.group(1)].append(match.group(2))
+
+            # ************************************************
+            # control swtiches and intialize job/chain section
+            # ************************************************
 
             # so_job_table
             if line.startswith('START=so_job_table'):
@@ -142,6 +150,10 @@ def exp_to_json(file_path):
             if line.startswith('END'):
                 _reset_switches()
 
+            # **********************************************
+            # add matched results to correspoinding sections
+            # **********************************************
+
             match = re.search(r'^(.*?)=(.*)', line)
 
             # job_table
@@ -174,5 +186,4 @@ def exp_to_json(file_path):
             # TODO: need to handle line starts with 'DELETE'?
 
     exp_json['checks'] = check_dict
-    print(json.dumps(exp_json, indent=4))
     return exp_json
