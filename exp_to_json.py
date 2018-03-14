@@ -36,10 +36,12 @@ def exp_to_json(file_path):
         'K': [],  # application
         'L': [],  # pathes
         'M': [],  #
-        'O': [],  # logins
-        'Q': [],  # queues
         'n': [],  # notifications
+        'O': [],  # logins
+        'P': [],
+        'Q': [],  # queues
         'R': [],  # roles
+        'T': [],
         'U': []   #
     }
 
@@ -185,4 +187,6 @@ def exp_to_json(file_path):
             # TODO: need to handle line starts with 'DELETE'?
 
     exp_json['checks'] = check_dict
+    # import json
+    # print(json.dumps(exp_json, indent=4))
     return exp_json
