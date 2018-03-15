@@ -178,7 +178,11 @@ def exp_to_json(file_path):
 
             # chain_detail
             elif match and is_chain_detail:
-                exp_json['so_chain_detail'][chain_idx]['params'][match.group(1)] = match.group(2)
+                chain_params = exp_json['so_chain_detail'][chain_idx]['params']
+                if match.group(1) == 'so_predecessors':
+                    chain_params[match.group(1)] = re.findall(r'&/(.*?) =', match.group(2))
+                else:
+                    chain_params[match.group(1)] = match.group(2)
 
             # job_prompts
             elif match and is_job_prompts:

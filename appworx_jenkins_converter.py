@@ -1,5 +1,6 @@
 import argparse
 import jenkins
+import json
 from exp_to_json import exp_to_json
 from lxml import etree as et
 
@@ -54,6 +55,26 @@ def initial_project():
 if __name__ == '__main__':
     args = set_arguments()
     exp_json = exp_to_json(args.exp_file)
+
+    # ******************************************************
+    # create phases topology
+    # ******************************************************
+    original = [(job['params']['so_predecessors'], job['so_task_name']) for job in exp_json['so_chain_detail']]
+    phases = [[] for _ in range(len(original))]
+    while original:
+        for job in original:
+            so_predecessors, so_task_name = job
+            if not so_predecessors:
+                phases[0].append(so_task_name)
+                original.remove(job)
+            elif so_predecessors in phases:
+                phases[phases.index(so_predecessors) + 1].append(so_task_name)
+                original.remove(job)
+            elif len(so_predecessors) > 1:
+                for phase in phases:
+                    if so_predecessors[0] in phase:
+                        phases[phases.index(phase) + 1].append(so_task_name)
+                        original.remove(job)
 
     # ******************************************************
     # AppWorx module (job) to Jenkins free-style job project
@@ -130,11 +151,11 @@ if __name__ == '__main__':
         pretty_print=True
     )
 
-    print(jenkins_job_config)
+    # print(jenkins_job_config)
     # import config directly to Jenkins
-    server = jenkins.Jenkins(
-        args.jenkins_url,
-        username=args.jenkins_username,
-        password=args.jenkins_token
-    )
-    server.create_job(exp_json['so_job_table']['so_module'], jenkins_job_config)
+    # server = jenkins.Jenkins(
+    #     args.jenkins_url,
+    #     username=args.jenkins_username,
+    #     password=args.jenkins_token
+    # )
+    # server.create_job(exp_json['so_job_table']['so_module'], jenkins_job_config)
