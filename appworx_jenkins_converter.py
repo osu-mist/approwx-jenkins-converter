@@ -27,7 +27,11 @@ def initial_project():
     et.SubElement(project, 'triggers', attrib={"class": "vector"})
     properties = et.SubElement(project, 'properties')
 
-    rebuilds = et.SubElement(properties, 'com.sonyericsson.rebuild.RebuildSettings', plugin='rebuild@1.27')
+    rebuilds = et.SubElement(
+        properties,
+        'com.sonyericsson.rebuild.RebuildSettings',
+        plugin='rebuild@1.27'
+    )
     et.SubElement(rebuilds, 'autoRebuild').text = 'false'
     et.SubElement(rebuilds, 'rebuildDisabled').text = 'false'
 
@@ -51,21 +55,55 @@ if __name__ == '__main__':
     args = set_arguments()
     exp_json = exp_to_json(args.exp_file)
 
-    # convert AppWorx module/job to Jenkins job project
+    # ******************************************************
+    # AppWorx module (job) to Jenkins free-style job project
+    # ******************************************************
     if not exp_json['so_chain_detail']:
         project = et.Element('project')
         initial_project()
 
         # build steps
-        if exp_json['so_job_table']['params']['so_program']:
+        so_program = exp_json['so_job_table']['params']['so_program']
+        if so_program:
             shell = et.SubElement(builders, 'hudson.tasks.Shell')
-        et.SubElement(shell, 'command').text = 'sqr {}.sqr'.format(exp_json['so_job_table']['params']['so_program'])
+            et.SubElement(shell, 'command').text = 'sqr {}.sqr'.format(so_program)
 
-    # convert AppWorx chain/process flow to Jenkins multijob project
+    # ********************************************************
+    # AppWorx chain (process flow) to Jenkins multijob project
+    # ********************************************************
     else:
-        project = et.Element('com.tikal.jenkins.plugins.multijob.MultiJobProject', plugin='jenkins-multijob-plugin@1.29')
+        project = et.Element(
+            'com.tikal.jenkins.plugins.multijob.MultiJobProject',
+            plugin='jenkins-multijob-plugin@1.29'
+        )
         initial_project()
 
+        # build steps
+        chain_detail = sorted(exp_json['so_chain_detail'], key=lambda x: x['params']['so_chain_order'])
+        for index, chain_phase in enumerate(chain_detail):
+            phase = et.SubElement(builders, 'com.tikal.jenkins.plugins.multijob.MultiJobBuilder')
+            et.SubElement(phase, 'phaseName').text = 'Phase {}'.format(index + 1)
+            phase_jobs = et.SubElement(phase, 'phaseJobs')
+
+            # jobs in each phase
+            phase_job = et.SubElement(phase_jobs, 'com.tikal.jenkins.plugins.multijob.PhaseJobsConfig')
+            et.SubElement(phase_job, 'jobName').text = chain_phase['params']['so_module']
+            et.SubElement(phase_job, 'currParams').text = 'true'
+            et.SubElement(phase_job, 'aggregatedTestResults').text = 'false'
+            et.SubElement(phase_job, 'exposedSCM').text = 'false'
+            et.SubElement(phase_job, 'disableJob').text = 'false'
+            et.SubElement(phase_job, 'parsingRulesPath')
+            et.SubElement(phase_job, 'maxRetries').text = '0'
+            et.SubElement(phase_job, 'enableRetryStrategy').text = 'false'
+            et.SubElement(phase_job, 'enableCondition').text = 'false'
+            et.SubElement(phase_job, 'abortAllJob').text = 'true'
+            et.SubElement(phase_job, 'condition')
+            et.SubElement(phase_job, 'config', attrib={"class": "empty-list"})
+            et.SubElement(phase_job, 'killPhaseOnJobResultCondition').text = 'FAILURE'
+            et.SubElement(phase_job, 'buildOnlyIfSCMChanges').text = 'false'
+            et.SubElement(phase_job, 'applyConditionOnlyIfNoSCMChanges').text = 'false'
+
+    # export Jenkins config file
     jenkins_job_config = et.tostring(
         project,
         xml_declaration=True,
@@ -75,9 +113,9 @@ if __name__ == '__main__':
 
     print(jenkins_job_config)
     # import config directly to Jenkins
-    # server = jenkins.Jenkins(
-    #     args.jenkins_url,
-    #     username=args.jenkins_username,
-    #     password=args.jenkins_token
-    # )
-    # server.create_job(exp_json['so_job_table']['so_module'], jenkins_job_config)
+    server = jenkins.Jenkins(
+        args.jenkins_url,
+        username=args.jenkins_username,
+        password=args.jenkins_token
+    )
+    server.create_job(exp_json['so_job_table']['so_module'], jenkins_job_config)
