@@ -26,7 +26,7 @@ def exp_to_json(file_path):
         'so_chain_detail': [],
         'so_job_table': {},
         'so_job_prompts': [],
-        'so_object_cond': []
+        'so_object_cond': {}
     }
 
     check_dict = {
@@ -135,16 +135,20 @@ def exp_to_json(file_path):
 
                 task_pattern = r'so_task_name=([^\s]*)'
                 so_task_name = None if not re.search(task_pattern, line) else re.search(task_pattern, line).group(1)
-
                 so_soc_order = re.search(r'so_soc_order=([^\s]*)', line).group(1)
                 so_obj_type = re.search(r'so_obj_type=([^\s]*)', line).group(1)
-                exp_json['so_object_cond'].append({
-                    'so_module': so_module,
-                    'so_task_name': so_task_name,
-                    'so_soc_order': so_soc_order,
-                    'so_obj_type': so_obj_type,
-                    'params': {}
+
+                if so_task_name not in exp_json['so_object_cond']:
+                    exp_json['so_object_cond'][so_task_name] = {
+                        'so_module': so_module,
+                        'so_obj_type': so_obj_type,
+                        'conditions': []
+                    }
+
+                exp_json['so_object_cond'][so_task_name]['conditions'].append({
+                    'so_soc_order': so_soc_order
                 })
+
                 continue
 
             # reset all switches if END
@@ -182,11 +186,11 @@ def exp_to_json(file_path):
 
             # object_cond
             elif match and is_object_cond:
-                exp_json['so_object_cond'][int(so_soc_order)-1]['params'][match.group(1)] = match.group(2)
+                exp_json['so_object_cond'][so_task_name]['conditions'][int(so_soc_order)-1][match.group(1)] = match.group(2)
 
             # TODO: need to handle line starts with 'DELETE'?
 
     exp_json['checks'] = check_dict
-    # import json
-    # print(json.dumps(exp_json, indent=4))
+    import json
+    print(json.dumps(exp_json, indent=4))
     return exp_json
