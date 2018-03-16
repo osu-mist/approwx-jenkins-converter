@@ -32,17 +32,17 @@ def exp_to_json(file_path):
     check_dict = {
         'B': [],  # program types
         'D': [],  # data type
-        'G': [],  # agents
-        'K': [],  # application
-        'L': [],  # pathes
-        'M': [],  #
-        'n': [],  # notifications
+        'G': [],  # agent groups
+        'K': [],  # applications
+        'L': [],  # libraries
+        'M': [],  # modules/jobs
+        'n': [],  # notifications environment
         'O': [],  # logins
-        'P': [],
+        'P': [],  # output devices
         'Q': [],  # queues
-        'R': [],  # roles
-        'T': [],
-        'U': []   #
+        'R': [],  # user groups
+        'T': [],  # output groups
+        'U': []   # users
     }
 
     _reset_switches()
@@ -195,6 +195,4 @@ def exp_to_json(file_path):
             # TODO: need to handle line starts with 'DELETE'?
 
     exp_json['checks'] = check_dict
-    # import json
-    # print(json.dumps(exp_json, indent=4))
     return exp_json

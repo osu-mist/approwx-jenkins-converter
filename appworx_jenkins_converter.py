@@ -154,7 +154,10 @@ if __name__ == '__main__':
     )
 
     print(jenkins_job_config)
+
+    # *********************************
     # import config directly to Jenkins
+    # *********************************
     server = jenkins.Jenkins(
         args.jenkins_url,
         username=args.jenkins_username,
