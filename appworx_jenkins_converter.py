@@ -1,6 +1,5 @@
 import argparse
 import jenkins
-import json
 from exp_to_json import exp_to_json
 from lxml import etree as et
 
@@ -113,7 +112,8 @@ if __name__ == '__main__':
             # jobs in each phase
             for job in jobs:
                 phase_job = et.SubElement(phase_jobs, 'com.tikal.jenkins.plugins.multijob.PhaseJobsConfig')
-                et.SubElement(phase_job, 'jobName').text = job
+                job_module = filter(lambda x: x['so_task_name'] == job, chain_detail)[0]['params']['so_module']
+                et.SubElement(phase_job, 'jobName').text = job_module
                 et.SubElement(phase_job, 'currParams').text = 'true'
                 et.SubElement(phase_job, 'aggregatedTestResults').text = 'false'
                 et.SubElement(phase_job, 'exposedSCM').text = 'false'
@@ -155,9 +155,9 @@ if __name__ == '__main__':
 
     print(jenkins_job_config)
     # import config directly to Jenkins
-    # server = jenkins.Jenkins(
-    #     args.jenkins_url,
-    #     username=args.jenkins_username,
-    #     password=args.jenkins_token
-    # )
-    # server.create_job(exp_json['so_job_table']['so_module'], jenkins_job_config)
+    server = jenkins.Jenkins(
+        args.jenkins_url,
+        username=args.jenkins_username,
+        password=args.jenkins_token
+    )
+    server.create_job(exp_json['so_job_table']['so_module'], jenkins_job_config)
