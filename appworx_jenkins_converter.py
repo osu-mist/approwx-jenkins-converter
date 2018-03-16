@@ -75,6 +75,7 @@ if __name__ == '__main__':
                     if so_predecessors[0] in phase:
                         phases[phases.index(phase) + 1].append(so_task_name)
                         original.remove(job)
+    phases = filter(None, phases)
 
     # ******************************************************
     # AppWorx module (job) to Jenkins free-style job project
@@ -102,7 +103,7 @@ if __name__ == '__main__':
 
         # build steps
         chain_detail = sorted(exp_json['so_chain_detail'], key=lambda x: x['params']['so_chain_order'])
-        for index, chain_phase in enumerate(chain_detail):
+        for index, jobs in enumerate(phases):
             phase = et.SubElement(builders, 'com.tikal.jenkins.plugins.multijob.MultiJobBuilder')
             et.SubElement(phase, 'phaseName').text = 'Phase {}'.format(index + 1)
             et.SubElement(phase, 'continuationCondition').text = 'ALWAYS'
@@ -110,38 +111,39 @@ if __name__ == '__main__':
             phase_jobs = et.SubElement(phase, 'phaseJobs')
 
             # jobs in each phase
-            phase_job = et.SubElement(phase_jobs, 'com.tikal.jenkins.plugins.multijob.PhaseJobsConfig')
-            et.SubElement(phase_job, 'jobName').text = chain_phase['params']['so_module']
-            et.SubElement(phase_job, 'currParams').text = 'true'
-            et.SubElement(phase_job, 'aggregatedTestResults').text = 'false'
-            et.SubElement(phase_job, 'exposedSCM').text = 'false'
-            et.SubElement(phase_job, 'disableJob').text = 'false'
-            et.SubElement(phase_job, 'parsingRulesPath')
-            et.SubElement(phase_job, 'maxRetries').text = '0'
-            et.SubElement(phase_job, 'enableRetryStrategy').text = 'false'
-            et.SubElement(phase_job, 'enableCondition').text = 'false'
-            et.SubElement(phase_job, 'abortAllJob').text = 'true'
-            et.SubElement(phase_job, 'config', attrib={"class": "empty-list"})
-            et.SubElement(phase_job, 'killPhaseOnJobResultCondition').text = 'FAILURE'
-            et.SubElement(phase_job, 'buildOnlyIfSCMChanges').text = 'false'
-            et.SubElement(phase_job, 'applyConditionOnlyIfNoSCMChanges').text = 'false'
+            for job in jobs:
+                phase_job = et.SubElement(phase_jobs, 'com.tikal.jenkins.plugins.multijob.PhaseJobsConfig')
+                et.SubElement(phase_job, 'jobName').text = job
+                et.SubElement(phase_job, 'currParams').text = 'true'
+                et.SubElement(phase_job, 'aggregatedTestResults').text = 'false'
+                et.SubElement(phase_job, 'exposedSCM').text = 'false'
+                et.SubElement(phase_job, 'disableJob').text = 'false'
+                et.SubElement(phase_job, 'parsingRulesPath')
+                et.SubElement(phase_job, 'maxRetries').text = '0'
+                et.SubElement(phase_job, 'enableRetryStrategy').text = 'false'
+                et.SubElement(phase_job, 'enableCondition').text = 'false'
+                et.SubElement(phase_job, 'abortAllJob').text = 'true'
+                et.SubElement(phase_job, 'config', attrib={"class": "empty-list"})
+                et.SubElement(phase_job, 'killPhaseOnJobResultCondition').text = 'FAILURE'
+                et.SubElement(phase_job, 'buildOnlyIfSCMChanges').text = 'false'
+                et.SubElement(phase_job, 'applyConditionOnlyIfNoSCMChanges').text = 'false'
 
-            if chain_phase['so_task_name'] in exp_json['so_object_cond']:
+                if job in exp_json['so_object_cond']:
 
-                # *** only create condition text for the demo ***
-                condition_text = []
-                conditions = exp_json['so_object_cond'][chain_phase['so_task_name']]['conditions']
-                for condition in conditions:
-                    so_condition_1 = condition['so_condition_1']
-                    so_qualifier = condition['so_qualifier']
-                    so_condition_2 = condition['so_condition_2']
-                    sub_condition = '({} {} {})'.format(so_condition_1, so_qualifier, so_condition_2)
-                    condition_text.append(sub_condition)
+                    # *** only create condition text for the demo ***
+                    condition_text = []
+                    conditions = exp_json['so_object_cond'][job]['conditions']
+                    for condition in conditions:
+                        so_condition_1 = condition['so_condition_1']
+                        so_qualifier = condition['so_qualifier']
+                        so_condition_2 = condition['so_condition_2']
+                        sub_condition = '({} {} {})'.format(so_condition_1, so_qualifier, so_condition_2)
+                        condition_text.append(sub_condition)
 
-                et.SubElement(phase_job, 'enableCondition').text = 'true'
-                et.SubElement(phase_job, 'condition').text = ' && '.join(condition_text)
-            else:
-                et.SubElement(phase_job, 'condition')
+                    et.SubElement(phase_job, 'enableCondition').text = 'true'
+                    et.SubElement(phase_job, 'condition').text = ' && '.join(condition_text)
+                else:
+                    et.SubElement(phase_job, 'condition')
 
     # export Jenkins config file
     jenkins_job_config = et.tostring(
@@ -151,7 +153,7 @@ if __name__ == '__main__':
         pretty_print=True
     )
 
-    # print(jenkins_job_config)
+    print(jenkins_job_config)
     # import config directly to Jenkins
     # server = jenkins.Jenkins(
     #     args.jenkins_url,
